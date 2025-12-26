@@ -1,109 +1,166 @@
 import React, { useState } from 'react';
-import { X, RotateCcw, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { X, RotateCcw } from 'lucide-react';
 
 const StudyArena = () => {
   const navigate = useNavigate();
-  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
-  const [feedbackState, setFeedbackState] = useState(null); // null | 'correct' | 'incorrect'
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [mode, setMode] = useState('quiz'); // 'flashcard' or 'quiz'
+  const [currentCard, setCurrentCard] = useState(0);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [showHint, setShowHint] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const [shake, setShake] = useState(false);
+  const [cardGlow, setCardGlow] = useState(null); // 'green', 'red', 'yellow', 'orange' or null
 
-  const cards = [
-    { question: 'What is the capital of France?', answer: 'Paris' },
-    { question: 'Who developed the theory of relativity?', answer: 'Albert Einstein' },
-    { question: 'What is the powerhouse of the cell?', answer: 'Mitochondria' },
+  const flashcards = [
+    {
+      question: 'What is the primary function of the mitochondria?',
+      answer: 'Energy production (ATP)',
+      description: 'Known as the powerhouse of the cell, it converts nutrients into adenosine triphosphate.'
+    },
+    {
+      question: 'What is the capital of France?',
+      answer: 'Paris',
+      description: 'Located on the Seine River in northern France.'
+    },
+    {
+      question: 'What is the process by which green plants use sunlight to synthesize foods?',
+      answer: 'Photosynthesis',
+      description: 'It generally involves the green pigment chlorophyll and generates oxygen as a byproduct.'
+    }
   ];
 
-  const currentCard = cards[currentCardIndex];
-  const isSessionComplete = currentCardIndex >= cards.length;
+  const currentFlashcard = flashcards[currentCard];
 
-  const handleReveal = () => {
-    setIsAnswerRevealed(true);
+  // Emotion-based colors from the wheel
+  const ratingColors = {
+    bad: { bg: '#FECACA', border: '#F87171', text: '#991B1B' },        // Red - remorse/sadness
+    average: { bg: '#FEF3C7', border: '#FBBF24', text: '#92400E' },    // Yellow - pensiveness
+    good: { bg: '#BBF7D0', border: '#4ADE80', text: '#166534' },       // Green - optimism/serenity
+    excellent: { bg: '#DBEAFE', border: '#60A5FA', text: '#1E40AF' }   // Blue - joy/love
   };
 
-  const handleAssessment = (assessment) => {
-    // 'bad' -> incorrect, 'good'/'excellent' -> correct
-    setFeedbackState(assessment === 'bad' ? 'incorrect' : 'correct');
+  const handleReveal = () => {
+    setIsRevealed(true);
+  };
 
-    // Move to next card after a brief delay
+  const handleRating = (rating) => {
+    if (rating === 'good' || rating === 'excellent') {
+      setCardGlow('green');
+    } else if (rating === 'bad') {
+      setCardGlow('red');
+    } else if (rating === 'average') {
+      setCardGlow('yellow');
+    }
+
     setTimeout(() => {
-      setIsAnswerRevealed(false);
-      setFeedbackState(null);
-      setCurrentCardIndex((prev) => prev + 1);
-    }, 800);
+      if (currentCard < flashcards.length - 1) {
+        setCurrentCard(currentCard + 1);
+        setIsRevealed(false);
+        setCardGlow(null);
+      } else {
+        setSessionComplete(true);
+      }
+    }, 400);
+  };
+
+  const handleSubmitQuiz = () => {
+    if (!userAnswer.trim()) {
+      setShake(true);
+      setCardGlow('red');
+      setTimeout(() => {
+        setShake(false);
+        setCardGlow(null);
+      }, 300);
+      return;
+    }
+    setIsSubmitted(true);
+  };
+
+  const handleNextQuiz = (rating) => {
+    if (rating === 'good' || rating === 'excellent') {
+      setCardGlow('green');
+    } else if (rating === 'bad') {
+      setCardGlow('red');
+    } else if (rating === 'average') {
+      setCardGlow('yellow');
+    }
+
+    setTimeout(() => {
+      if (currentCard < flashcards.length - 1) {
+        setCurrentCard(currentCard + 1);
+        setIsSubmitted(false);
+        setUserAnswer('');
+        setShowHint(false);
+        setCardGlow(null);
+      } else {
+        setSessionComplete(true);
+      }
+    }, 400);
   };
 
   const handleRestart = () => {
-    setCurrentCardIndex(0);
-    setIsAnswerRevealed(false);
-    setFeedbackState(null);
+    setCurrentCard(0);
+    setIsRevealed(false);
+    setIsSubmitted(false);
+    setUserAnswer('');
+    setShowHint(false);
+    setSessionComplete(false);
+    setCardGlow(null);
   };
 
-  // Glow styles based on feedback
-  const getCardGlow = () => {
-    if (feedbackState === 'correct') return '0 0 40px 10px rgba(34, 197, 94, 0.3)';
-    if (feedbackState === 'incorrect') return '0 0 40px 10px rgba(239, 68, 68, 0.3)';
-    return 'var(--shadow-hover)';
+  // Get glow style based on cardGlow state
+  const getGlowStyle = () => {
+    switch (cardGlow) {
+      case 'green':
+        return {
+          boxShadow: '0 0 0 4px rgba(74, 222, 128, 0.5), 0 4px 20px rgba(74, 222, 128, 0.3)',
+          border: '2px solid #4ADE80'
+        };
+      case 'red':
+        return {
+          boxShadow: '0 0 0 4px rgba(248, 113, 113, 0.5), 0 4px 20px rgba(248, 113, 113, 0.3)',
+          border: '2px solid #F87171'
+        };
+      case 'yellow':
+        return {
+          boxShadow: '0 0 0 4px rgba(251, 191, 36, 0.5), 0 4px 20px rgba(251, 191, 36, 0.3)',
+          border: '2px solid #FBBF24'
+        };
+      default:
+        return {
+          boxShadow: 'var(--shadow-soft)',
+          border: '1px solid var(--border-subtle)'
+        };
+    }
   };
 
-  const getCardBorder = () => {
-    if (feedbackState === 'correct') return '2px solid rgba(34, 197, 94, 0.5)';
-    if (feedbackState === 'incorrect') return '2px solid rgba(239, 68, 68, 0.5)';
-    return '1px solid var(--border-subtle)';
-  };
-
-  // Session Complete Screen
-  if (isSessionComplete) {
+  if (sessionComplete) {
     return (
-      <div style={{
+      <div className="animate-fade-in" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
+        minHeight: '80vh',
         textAlign: 'center',
         padding: '2rem'
       }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
-          Session Complete 🎉
+        <h1 style={{ fontSize: 'var(--text-h1)', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+          Session Complete! 🎉
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '3rem', maxWidth: '400px' }}>
-          Great job! You've reviewed all the cards in this session.
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+          You reviewed {flashcards.length} cards
         </p>
-
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '1rem 2rem',
-              borderRadius: '50px',
-              backgroundColor: 'transparent',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-primary)',
-              fontWeight: 500,
-              fontSize: '1rem',
-              cursor: 'pointer'
-            }}
-          >
-            Return to Dashboard
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn btn-secondary" onClick={() => navigate('/')}>
+            Exit to Dashboard
           </button>
-          <button
-            onClick={handleRestart}
-            style={{
-              padding: '1rem 2rem',
-              borderRadius: '50px',
-              backgroundColor: 'var(--accent-primary)',
-              color: 'var(--accent-text)',
-              fontWeight: 600,
-              fontSize: '1rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
+          <button className="btn btn-primary" onClick={handleRestart}>
             <RotateCcw size={18} />
-            Study Again
+            Restart Session
           </button>
         </div>
       </div>
@@ -112,153 +169,338 @@ const StudyArena = () => {
 
   return (
     <div className="animate-fade-in" style={{
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      height: '100%',
-      position: 'relative',
       padding: '2rem'
     }}>
-      {/* Exit Button */}
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          position: 'absolute',
-          top: '1.5rem',
-          left: '1.5rem',
-          padding: '0.5rem',
-          borderRadius: '50%',
-          color: 'var(--text-muted)',
-          backgroundColor: 'transparent',
-          border: '1px solid var(--border-subtle)',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease'
-        }}
-        title="Exit Session"
-      >
-        <X size={20} />
-      </button>
-
-      {/* Card Counter */}
+      {/* Header - just X and progress */}
       <div style={{
-        position: 'absolute',
+        position: 'fixed',
         top: '1.5rem',
+        left: '1.5rem',
         right: '1.5rem',
-        color: 'var(--text-muted)',
-        fontSize: '0.9rem'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
-        {currentCardIndex + 1} / {cards.length}
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+            fontSize: '1.5rem'
+          }}
+        >
+          ×
+        </button>
+
+        <div style={{
+          backgroundColor: 'var(--neutral-200)',
+          padding: '0.4rem 0.8rem',
+          borderRadius: '9999px',
+          fontSize: 'var(--text-small)',
+          color: 'var(--text-secondary)'
+        }}>
+          {currentCard + 1} of {flashcards.length}
+        </div>
       </div>
 
-      {/* Floating Card */}
+      {/* Main Card */}
       <div style={{
         backgroundColor: 'var(--bg-card)',
-        borderRadius: '24px',
-        padding: '4rem 5rem',
-        maxWidth: '600px',
+        borderRadius: 'var(--radius-lg)',
         width: '100%',
-        textAlign: 'center',
-        boxShadow: getCardGlow(),
-        border: getCardBorder(),
-        transition: 'all 0.3s ease'
+        maxWidth: '500px',
+        padding: '1.5rem',
+        transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
+        ...getGlowStyle()
       }}>
+        {/* Card Header: Mode Toggle + X + Progress */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1.5rem'
+        }}>
+          {/* Mode Toggle */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: 'var(--neutral-200)',
+            borderRadius: '9999px',
+            padding: '3px'
+          }}>
+            <button
+              onClick={() => { setMode('quiz'); setIsSubmitted(false); setIsRevealed(false); }}
+              style={{
+                padding: '0.4rem 0.8rem',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 'var(--text-small)',
+                fontWeight: 500,
+                backgroundColor: mode === 'quiz' ? 'var(--neutral-800)' : 'transparent',
+                color: mode === 'quiz' ? 'white' : 'var(--text-muted)'
+              }}
+            >
+              Quiz
+            </button>
+            <button
+              onClick={() => { setMode('flashcard'); setIsSubmitted(false); setIsRevealed(false); }}
+              style={{
+                padding: '0.4rem 0.8rem',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 'var(--text-small)',
+                fontWeight: 500,
+                backgroundColor: mode === 'flashcard' ? 'var(--neutral-800)' : 'transparent',
+                color: mode === 'flashcard' ? 'white' : 'var(--text-muted)'
+              }}
+            >
+              Flashcards
+            </button>
+          </div>
+
+          {/* Progress inside card */}
+          <span style={{
+            fontSize: 'var(--text-small)',
+            color: 'var(--text-muted)',
+            backgroundColor: 'var(--neutral-100)',
+            padding: '0.3rem 0.6rem',
+            borderRadius: '9999px'
+          }}>
+            {currentCard + 1} of {flashcards.length}
+          </span>
+
+          {/* Close button inside card */}
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              fontSize: '1.25rem',
+              padding: '0.25rem'
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
         {/* Question */}
         <h2 style={{
-          fontSize: '1.75rem',
+          fontSize: '1.35rem',
           fontWeight: 500,
           color: 'var(--text-primary)',
-          marginBottom: isAnswerRevealed ? '2rem' : '0',
-          lineHeight: 1.4
+          lineHeight: 1.4,
+          marginBottom: '1.5rem'
         }}>
-          {currentCard.question}
+          {currentFlashcard.question}
         </h2>
 
-        {/* Answer (revealed) */}
-        {isAnswerRevealed && (
-          <div style={{
-            borderTop: '1px solid var(--border-subtle)',
-            paddingTop: '2rem',
-            marginTop: '1rem'
-          }}>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Answer
-            </p>
-            <p style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--accent-primary)' }}>
-              {currentCard.answer}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Action Buttons */}
-      <div style={{ marginTop: '3rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        {!isAnswerRevealed ? (
-          <button
-            onClick={handleReveal}
-            style={{
-              padding: '1rem 3rem',
-              borderRadius: '50px',
-              backgroundColor: 'var(--accent-primary)',
-              color: 'var(--accent-text)',
-              fontWeight: 600,
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              boxShadow: 'var(--shadow-soft)',
-              transition: 'transform 0.2s ease'
-            }}
-            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
-          >
-            Reveal Answer
-          </button>
-        ) : (
+        {/* QUIZ MODE */}
+        {mode === 'quiz' && (
           <>
-            <button
-              onClick={() => handleAssessment('bad')}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '50px',
-                backgroundColor: 'transparent',
-                border: '1px solid rgba(239, 68, 68, 0.5)',
-                color: '#EF4444',
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                cursor: 'pointer'
-              }}
-            >
-              Bad
-            </button>
-            <button
-              onClick={() => handleAssessment('good')}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '50px',
-                backgroundColor: 'transparent',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-primary)',
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                cursor: 'pointer'
-              }}
-            >
-              Good
-            </button>
-            <button
-              onClick={() => handleAssessment('excellent')}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '50px',
-                backgroundColor: 'transparent',
-                border: '1px solid rgba(34, 197, 94, 0.5)',
-                color: '#22C55E',
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                cursor: 'pointer'
-              }}
-            >
-              Excellent
-            </button>
+            {!isSubmitted ? (
+              <>
+                <textarea
+                  className={shake ? 'animate-shake' : ''}
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  placeholder="Type your answer here..."
+                  style={{
+                    width: '100%',
+                    minHeight: '100px',
+                    padding: '0.875rem',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: 'var(--text-body)',
+                    fontFamily: 'monospace',
+                    resize: 'vertical',
+                    outline: 'none',
+                    backgroundColor: 'var(--bg-secondary)',
+                    marginBottom: '1rem'
+                  }}
+                />
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <button
+                    onClick={() => setShowHint(!showHint)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      fontSize: 'var(--text-small)',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    Need a hint?
+                  </button>
+
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSubmitQuiz}
+                  >
+                    Submit
+                  </button>
+                </div>
+
+                {showHint && (
+                  <p style={{
+                    color: 'var(--text-secondary)',
+                    fontSize: 'var(--text-small)',
+                    fontStyle: 'italic',
+                    marginTop: '1rem',
+                    padding: '0.75rem',
+                    backgroundColor: 'var(--secondary-50)',
+                    borderRadius: 'var(--radius-sm)'
+                  }}>
+                    💡 {currentFlashcard.description}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div style={{
+                  borderTop: '1px solid var(--border-subtle)',
+                  paddingTop: '1.5rem',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.75rem',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {currentFlashcard.answer}
+                  </h3>
+                  <p style={{
+                    color: 'var(--text-secondary)',
+                    fontSize: 'var(--text-small)',
+                    marginBottom: '1.5rem'
+                  }}>
+                    {currentFlashcard.description}
+                  </p>
+                </div>
+
+                {/* Rating Buttons with Emotion Colors */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {['bad', 'average', 'good', 'excellent'].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => handleNextQuiz(rating)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '9999px',
+                        border: `1px solid ${ratingColors[rating].border}`,
+                        backgroundColor: ratingColors[rating].bg,
+                        color: ratingColors[rating].text,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontSize: 'var(--text-small)',
+                        fontWeight: 500,
+                        transition: 'transform 0.15s ease'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      {rating === 'bad' && '😓'}
+                      {rating === 'average' && '🤔'}
+                      {rating === 'good' && '😊'}
+                      {rating === 'excellent' && '🤩'}
+                      {' '}{rating.charAt(0).toUpperCase() + rating.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* FLASHCARD MODE */}
+        {mode === 'flashcard' && (
+          <>
+            {!isRevealed ? (
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleReveal}
+                >
+                  Reveal answer
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{
+                  borderTop: '1px solid var(--border-subtle)',
+                  paddingTop: '1.5rem',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.75rem',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {currentFlashcard.answer}
+                  </h3>
+                  <p style={{
+                    color: 'var(--text-secondary)',
+                    fontSize: 'var(--text-small)',
+                    marginBottom: '1.5rem'
+                  }}>
+                    {currentFlashcard.description}
+                  </p>
+                </div>
+
+                {/* Rating Buttons with Emotion Colors */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {['bad', 'average', 'good', 'excellent'].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => handleRating(rating)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '9999px',
+                        border: `1px solid ${ratingColors[rating].border}`,
+                        backgroundColor: ratingColors[rating].bg,
+                        color: ratingColors[rating].text,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontSize: 'var(--text-small)',
+                        fontWeight: 500,
+                        transition: 'transform 0.15s ease'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      {rating === 'bad' && '😓'}
+                      {rating === 'average' && '🤔'}
+                      {rating === 'good' && '😊'}
+                      {rating === 'excellent' && '🤩'}
+                      {' '}{rating.charAt(0).toUpperCase() + rating.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

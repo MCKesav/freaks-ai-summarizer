@@ -242,3 +242,297 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ===== ELEVATED PILL BUTTON SYSTEM ===== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-height: 44px;
+  min-width: 44px;
+  border: none;
+}
+
+/* Primary Button */
+.btn-primary {
+  background-color: var(--primary-600);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-700);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  background-color: var(--neutral-400);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background-color: var(--bg-card);
+  color: var(--primary-600);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background-color: var(--neutral-100);
+  border-color: var(--primary-600);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-secondary:active {
+  box-shadow: none;
+}
+
+.btn-secondary:disabled {
+  color: var(--neutral-400);
+  border-color: var(--neutral-300);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Tertiary / Ghost Button */
+.btn-tertiary {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+}
+
+.btn-tertiary:hover {
+  color: var(--text-primary);
+  background-color: var(--accent-light);
+}
+
+.btn-tertiary:disabled {
+  color: var(--neutral-400);
+  cursor: not-allowed;
+}
+
+/* Destructive Button */
+.btn-destructive {
+  background: transparent;
+  color: var(--error-500);
+  border: 1px solid var(--error-500);
+}
+
+.btn-destructive:hover {
+  background-color: var(--error-500);
+  color: white;
+}
+
+.btn-destructive-confirm {
+  background-color: var(--error-600);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Button Sizes */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: var(--text-small);
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+/* ===== FEEDBACK & SYSTEM STATUS ===== */
+
+/* Button Loading State */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.btn-secondary.btn-loading::after {
+  border: 2px solid rgba(37, 99, 235, 0.3);
+  border-top-color: var(--primary-600);
+}
+
+/* Button Success State */
+.btn-success {
+  background-color: var(--success-500) !important;
+  color: white !important;
+  pointer-events: none;
+}
+
+.btn-success::before {
+  content: '✓';
+  margin-right: 0.25rem;
+}
+
+/* Spin Animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Inline Spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--primary-600);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.spinner-sm {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+}
+
+.spinner-lg {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--neutral-200);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--primary-600);
+  border-radius: 9999px;
+  transition: width var(--transition-base);
+}
+
+.progress-bar-indeterminate .progress-bar-fill {
+  width: 30%;
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* Success Checkmark Animation */
+@keyframes success-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-check {
+  animation: success-pop 0.4s var(--ease-out-soft) forwards;
+}
+
+/* Optimistic UI - Pending State */
+.pending {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  background-color: var(--bg-card);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-modal);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 200;
+  border: 1px solid var(--border-subtle);
+  animation: toast-slide-in 0.3s var(--ease-out-soft);
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Shake Animation Class */
+.animate-shake {
+  animation: gentle-shake 300ms ease-in-out;
+}
+
+/* Active State (for 100-400ms responses) */
+.btn-active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* Dark Mode Overrides */
+[data-theme='dark'] .skeleton {
+  background: var(--neutral-700);
+}
+
+[data-theme='dark'] .progress-bar {
+  background-color: var(--neutral-700);
+}
+
+[data-theme='dark'] .spinner {
+  border-color: var(--neutral-600);
+  border-top-color: var(--accent-primary);
+}

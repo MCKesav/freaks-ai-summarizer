@@ -1,213 +1,333 @@
-import React from 'react';
-import { Play, ArrowRight, CheckCircle2, Flame, Clock, MoreHorizontal } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Plus, Users, Flame, CheckCircle2, Clock, Search, FileText, Layers, Zap, X } from 'lucide-react';
 
 const Dashboard = () => {
+    const navigate = useNavigate();
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const quickActions = [
+        { icon: FileText, label: 'Go to: Biology Notes', type: 'go' },
+        { icon: Layers, label: 'Create: New Flashcard Deck', type: 'create' },
+        { icon: Zap, label: 'Action: Start Focus Session', type: 'action' },
+    ];
+
+    const upNextTasks = [
+        { title: 'Advanced Algorithms: Graph Theory', subject: 'Computer Science', due: 'Today', isActive: true },
+        { title: 'Cognitive Psychology Notes', subject: 'Psychology 101', due: 'Tomorrow', isActive: false },
+        { title: 'System Design Interview Prep', subject: 'Career', due: 'Fri', isActive: false },
+    ];
+
     return (
-        <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingTop: '2rem' }}>
+        <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto', paddingTop: '2rem' }}>
 
-            {/* Header / Date - Optional Context */}
-            <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>Dashboard</h1>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Tuesday, Oct 24</span>
-            </header>
-
-            {/* Hero Card */}
+            {/* Hero Section - Greeting + Primary CTA */}
             <section style={{
-                backgroundColor: 'var(--bg-card)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '3rem',
-                marginBottom: '2rem',
-                boxShadow: 'var(--shadow-soft)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                border: '1px solid var(--border-subtle)'
+                textAlign: 'center',
+                padding: '4rem 2rem',
+                marginBottom: '1rem'
             }}>
-                <div>
-                    <h2 style={{
-                        fontSize: '2.5rem',
-                        fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        marginBottom: '1rem',
-                        letterSpacing: '-0.02em'
-                    }}>
-                        Good morning, Alex.
-                    </h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '2rem' }}>
-                        Ready to focus and achieve your goals?
-                    </p>
+                {/* Greeting */}
+                <h1 style={{
+                    fontSize: 'var(--text-h1)',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    marginBottom: '2.5rem',
+                    letterSpacing: '-0.02em'
+                }}>
+                    Welcome back, Alex
+                </h1>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ position: 'relative', width: '60px', height: '60px' }}>
-                            <svg width="60" height="60" viewBox="0 0 60 60" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="30" cy="30" r="26" stroke="var(--border-subtle)" strokeWidth="6" fill="none" />
-                                <circle cx="30" cy="30" r="26" stroke="var(--accent-primary)" strokeWidth="6" fill="none" strokeDasharray="163" strokeDashoffset="40" strokeLinecap="round" />
-                            </svg>
-                            <span style={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                fontSize: '0.9rem',
-                                fontWeight: 600,
-                                color: 'var(--text-primary)'
-                            }}>
-                                75%
-                            </span>
-                        </div>
+                {/* Primary CTA */}
+                <button
+                    className="btn btn-primary btn-lg"
+                    onClick={() => navigate('/study-arena')}
+                    style={{
+                        fontSize: '1.25rem',
+                        padding: '1.25rem 3rem',
+                        marginBottom: '1.5rem'
+                    }}
+                >
+                    <Play fill="currentColor" size={20} />
+                    Start Study Session
+                </button>
+
+                {/* Secondary CTAs */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <button className="btn btn-secondary" onClick={() => navigate('/knowledge-lab')}>
+                        <Plus size={18} />
+                        Add Study Material
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => navigate('/commons')}>
+                        <Users size={18} />
+                        Join Study Room
+                    </button>
+                </div>
+
+                {/* Search Bar Trigger */}
+                <div
+                    onClick={() => setIsSearchOpen(true)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        maxWidth: '400px',
+                        margin: '0 auto',
+                        padding: '0.875rem 1.25rem',
+                        backgroundColor: 'var(--bg-card)',
+                        borderRadius: '9999px',
+                        border: '1px solid var(--border-subtle)',
+                        boxShadow: 'var(--shadow-soft)',
+                        cursor: 'pointer',
+                        transition: 'box-shadow var(--transition-base)'
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-hover)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-soft)'; }}
+                >
+                    <Search size={18} color="var(--text-muted)" />
+                    <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-body)' }}>
+                        Search notes, topics...
+                    </span>
+                    <span style={{
+                        marginLeft: 'auto',
+                        fontSize: 'var(--text-caption)',
+                        color: 'var(--text-muted)',
+                        backgroundColor: 'var(--bg-secondary)',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: 'var(--radius-sm)'
+                    }}>
+                        ⌘K
+                    </span>
+                </div>
+            </section>
+
+            {/* Metric Cards Row */}
+            <section style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '1rem',
+                marginBottom: '1.5rem'
+            }}>
+                {/* Today's Goal Card */}
+                <div style={{
+                    backgroundColor: 'var(--bg-card)',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-subtle)'
+                }}>
+                    <div style={{ marginBottom: '0.75rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-small)' }}>Today's Goal</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        {/* Circular Progress Ring */}
+                        <svg width="36" height="36" viewBox="0 0 36 36">
+                            <circle
+                                cx="18" cy="18" r="15"
+                                fill="none"
+                                stroke="var(--neutral-200)"
+                                strokeWidth="3"
+                            />
+                            <circle
+                                cx="18" cy="18" r="15"
+                                fill="none"
+                                stroke="var(--primary-600)"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeDasharray={`${75 * 0.94} 100`}
+                                transform="rotate(-90 18 18)"
+                            />
+                        </svg>
                         <div>
-                            <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Today's Goal</p>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>6/8 hours studied</p>
+                            <span style={{ fontSize: '1.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>75%</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-small)', marginLeft: '0.5rem' }}>3/4 tasks done</span>
                         </div>
                     </div>
                 </div>
 
-                <button style={{
-                    backgroundColor: 'var(--accent-primary)',
-                    color: 'var(--accent-text)',
-                    padding: '1rem 2.5rem',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    boxShadow: 'var(--shadow-soft)',
-                    transition: 'transform 0.2s ease',
-                    height: 'fit-content'
-                }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                >
-                    <Play fill="currentColor" size={18} />
-                    Start Study Session
-                </button>
+                {/* Streak Card */}
+                <div style={{
+                    backgroundColor: 'var(--bg-card)',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-subtle)'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-small)' }}>Streak</span>
+                        <Flame size={18} color="var(--secondary-500)" />
+                    </div>
+                    <div>
+                        <span style={{ fontSize: '1.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>12</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-small)', marginLeft: '0.5rem' }}>Days</span>
+                    </div>
+                </div>
+
+                {/* Focus Time Card */}
+                <div style={{
+                    backgroundColor: 'var(--bg-card)',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-subtle)'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-small)' }}>Focus Time</span>
+                        <Clock size={18} color="var(--primary-600)" />
+                    </div>
+                    <div>
+                        <span style={{ fontSize: '1.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>1.5h</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-small)', marginLeft: '0.5rem' }}>Today</span>
+                    </div>
+                </div>
             </section>
 
-            {/* Metrics Grid */}
-            <section style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '2rem',
-                marginBottom: '2rem'
-            }}>
-                <MetricCard icon={Flame} label="Current Streak" value="12 Days" subtext="Personal Best: 14 days" accentColor="#F59E0B" />
-                <MetricCard icon={CheckCircle2} label="Tasks Today" value="5/8" subtext="62.5% Completed" accentColor="#10B981" />
-                <MetricCard icon={Clock} label="Focus Time" value="1.5h" subtext="+20m vs yesterday" accentColor="#3B82F6" />
-            </section>
-
-            {/* Up Next / Tasks Card */}
+            {/* Up Next Task List */}
             <section style={{
                 backgroundColor: 'var(--bg-card)',
                 borderRadius: 'var(--radius-lg)',
-                padding: '2rem',
-                boxShadow: 'var(--shadow-soft)',
-                border: '1px solid var(--border-subtle)'
+                border: '1px solid var(--border-subtle)',
+                overflow: 'hidden'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>Upcoming Tasks</h3>
-                    <button style={{ color: 'var(--text-muted)' }}><MoreHorizontal size={20} /></button>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '1rem 1.5rem',
+                    borderBottom: '1px solid var(--border-subtle)'
+                }}>
+                    <h2 style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--text-primary)' }}>Up next</h2>
+                    <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>•••</button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <TaskItem
-                        title="Advanced Algorithms: Graph Theory"
-                        meta="Computer Science"
-                        due="Today"
-                        active
-                    />
-                    <TaskItem
-                        title="Cognitive Psychology Notes"
-                        meta="Psychology 101"
-                        due="Tomorrow"
-                    />
-                    <TaskItem
-                        title="System Design Interview Prep"
-                        meta="Career"
-                        due="Fri"
-                    />
-                    <TaskItem
-                        title="Read: Chapter 5 - Modern History"
-                        meta="History"
-                        due="Fri"
-                    />
-                </div>
+                {upNextTasks.map((task, index) => (
+                    <div
+                        key={index}
+                        onClick={() => navigate('/study-arena')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '1rem 1.5rem',
+                            backgroundColor: task.isActive ? 'var(--bg-secondary)' : 'transparent',
+                            cursor: 'pointer',
+                            borderBottom: index < upNextTasks.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                            transition: 'background-color var(--transition-fast)'
+                        }}
+                        onMouseOver={(e) => { if (!task.isActive) e.currentTarget.style.backgroundColor = 'var(--neutral-100)'; }}
+                        onMouseOut={(e) => { if (!task.isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '50%',
+                                border: '2px solid var(--border-subtle)',
+                                backgroundColor: 'transparent'
+                            }} />
+                            <div>
+                                <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{task.title}</div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-small)' }}>{task.subject}</div>
+                            </div>
+                        </div>
+                        <span style={{
+                            color: task.due === 'Today' ? 'var(--primary-600)' : 'var(--text-muted)',
+                            fontSize: 'var(--text-small)',
+                            fontWeight: task.due === 'Today' ? 500 : 400
+                        }}>
+                            {task.due}
+                        </span>
+                    </div>
+                ))}
             </section>
+
+            {/* Command Palette Modal */}
+            {isSearchOpen && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'center',
+                        paddingTop: '15vh',
+                        zIndex: 100
+                    }}
+                    onClick={() => setIsSearchOpen(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            backgroundColor: 'var(--bg-card)',
+                            borderRadius: 'var(--radius-lg)',
+                            boxShadow: 'var(--shadow-modal)',
+                            width: '100%',
+                            maxWidth: '500px',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '1rem 1.25rem',
+                            borderBottom: '1px solid var(--border-subtle)'
+                        }}>
+                            <Search size={20} color="var(--text-muted)" />
+                            <input
+                                type="text"
+                                placeholder="Type to search or enter command..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                autoFocus
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    outline: 'none',
+                                    fontSize: 'var(--text-body)',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--text-primary)'
+                                }}
+                            />
+                            <button
+                                onClick={() => setIsSearchOpen(false)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div style={{ padding: '0.5rem 0' }}>
+                            {quickActions.map((action, index) => (
+                                <div
+                                    key={index}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.75rem',
+                                        padding: '0.75rem 1.25rem',
+                                        cursor: 'pointer',
+                                        transition: 'background-color var(--transition-fast)'
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                    onClick={() => {
+                                        setIsSearchOpen(false);
+                                        if (action.type === 'action') navigate('/study-arena');
+                                        if (action.type === 'create') navigate('/knowledge-lab');
+                                    }}
+                                >
+                                    <action.icon size={18} color="var(--text-muted)" />
+                                    <span style={{ color: 'var(--text-primary)', fontSize: 'var(--text-body)' }}>
+                                        {action.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
-
-const MetricCard = ({ icon: Icon, label, value, subtext, accentColor }) => (
-    <div style={{
-        backgroundColor: 'var(--bg-card)',
-        padding: '1.5rem',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-soft)',
-        border: '1px solid var(--border-subtle)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        minHeight: '140px'
-    }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{label}</span>
-            <Icon size={20} color={accentColor} />
-        </div>
-        <div>
-            <div style={{ fontSize: '2rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{value}</div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{subtext}</div>
-        </div>
-    </div>
-);
-
-const TaskItem = ({ title, meta, due, active }) => (
-    <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '1.25rem 1.5rem',
-        backgroundColor: active ? 'var(--bg-secondary)' : 'transparent',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid transparent',
-        transition: 'all 0.2s ease',
-        cursor: 'pointer'
-    }}
-        onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-        }}
-        onMouseOut={(e) => {
-            if (!active) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-            }
-        }}
-    >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                border: '2px solid var(--border-subtle)'
-            }} />
-            <div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>{title}</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{meta}</p>
-            </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{
-                fontSize: '0.85rem',
-                color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
-                fontWeight: active ? 600 : 400
-            }}>
-                {due}
-            </span>
-        </div>
-    </div>
-);
 
 export default Dashboard;
