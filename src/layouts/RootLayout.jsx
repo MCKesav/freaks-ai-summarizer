@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutGrid, BookOpen, BrainCircuit, Users, Sun, Moon } from 'lucide-react';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutGrid, BookOpen, BrainCircuit, Users, Sun, Moon, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const RootLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout, currentUser } = useAuth();
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
@@ -79,33 +82,88 @@ const RootLayout = () => {
           </nav>
         </div>
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            padding: '0.75rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--text-secondary)',
-            transition: 'all 0.2s ease',
-            marginTop: 'auto',
-            width: '100%',
-            cursor: 'pointer'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--bg-card)';
-            e.currentTarget.style.color = 'var(--text-primary)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = 'var(--text-secondary)';
-          }}
-        >
-          {theme === 'light' ? <Moon size={20} strokeWidth={1.5} /> : <Sun size={20} strokeWidth={1.5} />}
-          <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-        </button>
+        {/* Bottom Actions */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {/* User Info */}
+          {currentUser && (
+            <div style={{
+              padding: '0.75rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--bg-card)',
+              fontSize: '0.875rem',
+              color: 'var(--text-secondary)',
+              marginBottom: '0.5rem'
+            }}>
+              <div style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                {currentUser.displayName || 'User'}
+              </div>
+              <div style={{ fontSize: '0.75rem' }}>
+                {currentUser.email}
+              </div>
+            </div>
+          )}
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.75rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--text-secondary)',
+              transition: 'all 0.2s ease',
+              width: '100%',
+              cursor: 'pointer'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
+          >
+            {theme === 'light' ? <Moon size={20} strokeWidth={1.5} /> : <Sun size={20} strokeWidth={1.5} />}
+            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
+
+          {/* Logout Button */}
+          <button
+            onClick={async () => {
+              try {
+                await logout();
+                navigate('/login');
+              } catch (error) {
+                console.error('Logout error:', error);
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.75rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--text-secondary)',
+              transition: 'all 0.2s ease',
+              width: '100%',
+              cursor: 'pointer'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+              e.currentTarget.style.color = '#DC2626';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
+          >
+            <LogOut size={20} strokeWidth={1.5} />
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
