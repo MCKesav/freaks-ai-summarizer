@@ -1,0 +1,262 @@
+/* ===========================================
+   EMAIL VERIFIED PAGE - LIGHT & DARK MODE
+   Matches the minimal login page design system
+   =========================================== */
+
+.email-verified-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background 0.3s ease;
+  position: relative;
+}
+
+/* Light Mode */
+.email-verified-container.light {
+  background: #FBF9F6;
+}
+
+/* Dark Mode */
+.email-verified-container.dark {
+  background: linear-gradient(135deg, #0B1220 0%, #0F172A 100%);
+}
+
+/* ===========================================
+   CARD
+   =========================================== */
+
+.email-verified-card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* ===========================================
+   LOGO
+   =========================================== */
+
+.email-verified-card .logo-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 32px;
+  transition: color 0.3s ease;
+}
+
+.email-verified-container.light .logo-icon {
+  color: #1A1A2E;
+}
+
+.email-verified-container.dark .logo-icon {
+  color: #FFFFFF;
+}
+
+/* ===========================================
+   CONTENT
+   =========================================== */
+
+.verification-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ===========================================
+   ICONS
+   =========================================== */
+
+.verification-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.verification-icon.loading {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.verification-icon.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22C55E;
+}
+
+.verification-icon.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.verification-icon.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+/* Dark mode icon backgrounds */
+.email-verified-container.dark .verification-icon.loading {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.email-verified-container.dark .verification-icon.success {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.email-verified-container.dark .verification-icon.error {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.email-verified-container.dark .verification-icon.warning {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* Spinning animation */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ===========================================
+   TYPOGRAPHY
+   =========================================== */
+
+.verification-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.email-verified-container.light .verification-title {
+  color: #1A1A2E;
+}
+
+.email-verified-container.dark .verification-title {
+  color: #FFFFFF;
+}
+
+.verification-message {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  max-width: 320px;
+}
+
+.email-verified-container.light .verification-message {
+  color: #6B7280;
+}
+
+.email-verified-container.dark .verification-message {
+  color: #94A3B8;
+}
+
+.redirect-notice {
+  font-size: 13px;
+  color: #10B981;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+/* ===========================================
+   BUTTONS
+   =========================================== */
+
+.verification-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  max-width: 280px;
+  margin-bottom: 12px;
+  border: none;
+  font-family: inherit;
+}
+
+.verification-button.primary {
+  background: #3D5A80;
+  color: white;
+}
+
+.verification-button.primary:hover {
+  background: #2E4A6F;
+  transform: translateY(-1px);
+}
+
+.verification-button.primary:active {
+  transform: translateY(0);
+}
+
+.verification-button.secondary {
+  background: transparent;
+}
+
+/* Light mode secondary button */
+.email-verified-container.light .verification-button.secondary {
+  color: #6B7280;
+}
+
+.email-verified-container.light .verification-button.secondary:hover {
+  color: #1A1A2E;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode secondary button */
+.email-verified-container.dark .verification-button.secondary {
+  color: #94A3B8;
+}
+
+.email-verified-container.dark .verification-button.secondary:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ===========================================
+   LOADER
+   =========================================== */
+
+.verification-loader {
+  margin-top: 16px;
+  color: #3B82F6;
+}
+
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+
+@media (max-width: 480px) {
+  .email-verified-card {
+    max-width: 320px;
+  }
+  
+  .verification-title {
+    font-size: 20px;
+  }
+  
+  .verification-message {
+    font-size: 14px;
+  }
+  
+  .verification-button {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+}
