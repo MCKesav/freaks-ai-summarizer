@@ -1,10 +1,7 @@
-fix: resolve dark mode UI issues and KnowledgeLab syntax error
+feat(commons): add Silent Presence room mode with avatar-based UI
 
-- Fix createPortal syntax in KnowledgeLab.jsx (extra closing div)
-- Change highlight from --secondary-100 to --accent-light for dark mode
-- Update btn-secondary hover from yellow to blue (--primary-500)
-- Fix Join Code button hover in Commons
-- Add glassy/glassmorphism effects to Commons widgets (room cards, 
-  Community Stats, Your Path, Shared Playlist)
-- Add backdrop blur to KnowledgeLab Add Study Material modal
-- Remove LABS section from sidebar
+- In-place room transition preserving sidebar context
+- Participant avatars with speaking indicator
+- Floating video tile for opt-in camera users
+- Mic/camera controls with toggle states
+- Shared materials workspace
