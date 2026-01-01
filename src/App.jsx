@@ -13,6 +13,7 @@ import KnowledgeLab from './pages/KnowledgeLab';
 import StudyArena from './pages/StudyArena';
 import Commons from './pages/Commons';
 import ProfileSettings from './pages/ProfileSettings';
+import SupabaseTest from './components/SupabaseTest';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             <Route path="study-arena" element={<StudyArena />} />
             <Route path="commons" element={<Commons />} />
             <Route path="profile-settings" element={<ProfileSettings />} />
+            <Route path="test-supabase" element={<SupabaseTest />} />
           </Route>
 
           {/* Redirect unknown routes to login */}
