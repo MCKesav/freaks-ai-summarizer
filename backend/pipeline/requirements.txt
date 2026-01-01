@@ -1,0 +1,63 @@
+# =============================================================================
+# BACKEND PIPELINE DEPENDENCIES
+# =============================================================================
+# Install with: pip install -r requirements.txt
+# Python version: 3.10+ (tested with 3.13)
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+
+# Firebase
+firebase-admin>=6.4.0
+
+# Supabase
+supabase>=2.3.4
+
+# HTTP Client
+httpx>=0.26.0
+
+# Environment
+python-dotenv>=1.0.1
+
+# =============================================================================
+# EXTRACTION TOOLS
+# =============================================================================
+
+# PDF Extraction (PyMuPDF)
+pymupdf>=1.24.0
+
+# DOCX/PPTX Extraction (Apache Tika REST API)
+# WHY: Using official Tika server instead of deprecated python-tika
+# Downloads and runs Tika server automatically
+requests>=2.31.0
+
+# Image OCR (Tesseract)
+# WHY: Requires tesseract-ocr installed on system
+pytesseract>=0.3.10
+Pillow>=10.2.0
+
+# Audio/Video Transcription (Whisper)
+# WHY: Requires FFmpeg installed on system for video
+openai-whisper>=20231117
+
+# =============================================================================
+# SYSTEM DEPENDENCIES (must be installed separately)
+# =============================================================================
+# 
+# JAVA (for Apache Tika):
+#   Windows: Already at C:\Program Files\Java\jre1.8.0_471
+#   Or download: https://adoptium.net/
+#   
+# FFmpeg (for video processing):
+#   Windows: winget install ffmpeg
+#   Mac: brew install ffmpeg
+#   Linux: apt install ffmpeg
+#
+# Tesseract (for OCR):
+#   Windows: winget install tesseract
+#   Mac: brew install tesseract
+#   Linux: apt install tesseract-ocr
+#
+# =============================================================================

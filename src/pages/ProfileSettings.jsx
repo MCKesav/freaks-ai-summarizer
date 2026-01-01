@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { createAuthenticatedClient } from '../supabase';
 import {
     ArrowLeft,
     Check,
@@ -420,13 +421,91 @@ const ProfileSettings = () => {
     // Loading states
     const [savingProfile, setSavingProfile] = useState(false);
     const [savingPassword, setSavingPassword] = useState(false);
+    const [loadingProfile, setLoadingProfile] = useState(true);
+
+    // Load user profile from Supabase on mount
+    useEffect(() => {
+        const loadProfile = async () => {
+            if (!currentUser?.uid) {
+                setLoadingProfile(false);
+                return;
+            }
+
+            try {
+                const supabase = await createAuthenticatedClient();
+                const { data, error } = await supabase
+                    .from('users_profile')
+                    .select('*')
+                    .eq('firebase_uid', currentUser.uid)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                    // PGRST116 = no rows found (first time user)
+                    console.error('Error loading profile:', error);
+                } else if (data) {
+                    // Populate state from Supabase data
+                    // preferences is a JSONB column containing all settings
+                    const prefs = data.preferences || {};
+                    setSelectedAvatar(prefs.avatar_index ?? 0);
+                    setDisplayName(data.display_name || currentUser.displayName || '');
+                    setReducedMotion(prefs.reduced_motion ?? false);
+                    setHighContrast(prefs.high_contrast ?? false);
+                    setEmailNotifications(prefs.email_notifications ?? true);
+                    setCalendarConnected(prefs.calendar_connected ?? false);
+                    setApiKey(prefs.gemini_api_key || '');
+                }
+            } catch (err) {
+                console.error('Error loading profile:', err);
+            } finally {
+                setLoadingProfile(false);
+            }
+        };
+
+        loadProfile();
+    }, [currentUser]);
 
     const handleSaveProfile = async () => {
+        if (!currentUser?.uid) {
+            setUndoBar({ message: 'Please log in to save profile', type: 'error' });
+            return;
+        }
+
         setSavingProfile(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setSavingProfile(false);
-        setUndoBar({ message: 'Profile updated successfully', type: 'success' });
+        try {
+            const supabase = await createAuthenticatedClient();
+            
+            // The table has: id, firebase_uid, email, display_name, preferences (JSONB), created_at
+            const profileData = {
+                firebase_uid: currentUser.uid,
+                email: currentUser.email,
+                display_name: displayName,
+                preferences: {
+                    avatar_index: selectedAvatar,
+                    reduced_motion: reducedMotion,
+                    high_contrast: highContrast,
+                    email_notifications: emailNotifications,
+                    calendar_connected: calendarConnected,
+                    gemini_api_key: apiKey || null,
+                },
+            };
+
+            // Upsert: insert if not exists, update if exists
+            const { error } = await supabase
+                .from('users_profile')
+                .upsert(profileData, { onConflict: 'firebase_uid' });
+
+            if (error) {
+                console.error('Error saving profile:', error);
+                setUndoBar({ message: 'Failed to save profile: ' + error.message, type: 'error' });
+            } else {
+                setUndoBar({ message: 'Profile updated successfully', type: 'success' });
+            }
+        } catch (err) {
+            console.error('Error saving profile:', err);
+            setUndoBar({ message: 'Failed to save profile', type: 'error' });
+        } finally {
+            setSavingProfile(false);
+        }
     };
 
     const handleChangePassword = async () => {
