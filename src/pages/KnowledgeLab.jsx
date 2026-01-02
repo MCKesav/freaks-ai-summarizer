@@ -7,6 +7,70 @@ import { db, getFirebaseIdToken, getCurrentUser } from '../firebase';
 // Backend API URL
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
+// Simple markdown parser component
+const MarkdownContent = ({ content }) => {
+  if (!content) return null;
+  
+  // Split content by double newlines to get paragraphs
+  const paragraphs = content.split(/\n\n+/);
+  
+  const parseInline = (text) => {
+    // Parse bold (**text**)
+    const parts = [];
+    let remaining = text;
+    let key = 0;
+    
+    while (remaining) {
+      const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+      if (boldMatch) {
+        const beforeBold = remaining.substring(0, boldMatch.index);
+        if (beforeBold) {
+          parts.push(<span key={key++}>{beforeBold}</span>);
+        }
+        parts.push(<strong key={key++}>{boldMatch[1]}</strong>);
+        remaining = remaining.substring(boldMatch.index + boldMatch[0].length);
+      } else {
+        parts.push(<span key={key++}>{remaining}</span>);
+        break;
+      }
+    }
+    return parts;
+  };
+  
+  return (
+    <div style={{ fontSize: '1.05rem', lineHeight: '1.8' }}>
+      {paragraphs.map((para, index) => {
+        const trimmed = para.trim();
+        if (!trimmed) return null;
+        
+        // Check if it's a heading (starts with ** and ends with **)
+        if (trimmed.startsWith('**') && trimmed.endsWith('**') && !trimmed.slice(2, -2).includes('**')) {
+          const headingText = trimmed.slice(2, -2);
+          return (
+            <h3 key={index} style={{
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              marginTop: index > 0 ? '1.5rem' : 0,
+              marginBottom: '0.75rem',
+              fontFamily: 'var(--font-sans)',
+              color: 'var(--text-primary)'
+            }}>
+              {headingText}
+            </h3>
+          );
+        }
+        
+        // Regular paragraph
+        return (
+          <p key={index} style={{ marginBottom: '1rem' }}>
+            {parseInline(trimmed)}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 const KnowledgeLab = () => {
   const [hasContent, setHasContent] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -29,7 +93,49 @@ const KnowledgeLab = () => {
   const [uploadError, setUploadError] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   
+  // Materials and summary state
+  const [materials, setMaterials] = useState([]);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [isLoadingMaterials, setIsLoadingMaterials] = useState(false);
+  
   const fileInputRef = useRef(null);
+
+  // Fetch materials on mount and when user is authenticated
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      const currentUser = getCurrentUser();
+      if (!currentUser) return;
+      
+      setIsLoadingMaterials(true);
+      try {
+        const token = await getFirebaseIdToken();
+        const response = await fetch(`${API_URL}/api/materials`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setMaterials(data.materials || []);
+          
+          // Auto-select the first/most recent material
+          if (data.materials && data.materials.length > 0) {
+            setSelectedMaterial(data.materials[0]);
+            setHasContent(true);
+          } else {
+            setHasContent(false);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching materials:', err);
+      } finally {
+        setIsLoadingMaterials(false);
+      }
+    };
+    
+    fetchMaterials();
+  }, [currentFileId]); // Re-fetch when a new file is uploaded
 
   // Real-time status listener
   useEffect(() => {
@@ -173,6 +279,56 @@ const KnowledgeLab = () => {
     }
   };
 
+  // Text upload handler
+  const handleTextUpload = async () => {
+    if (!textInput.trim()) {
+      setUploadError('Please enter some text');
+      return;
+    }
+    
+    setUploadError(null);
+    setIsProcessing(true);
+    setUploadStatus('uploading');
+    setUploadProgress(10);
+    setUploadMessage('Processing text...');
+    
+    try {
+      // Check if user is authenticated
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        throw new Error('Please log in to process text');
+      }
+      
+      const token = await getFirebaseIdToken();
+      if (!token) {
+        throw new Error('Failed to get authentication token');
+      }
+      
+      const response = await fetch(`${API_URL}/api/upload/text`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: textInput }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Text processing failed');
+      }
+      
+      const result = await response.json();
+      setCurrentFileId(result.file_id);
+      
+    } catch (err) {
+      console.error('Text upload error:', err);
+      setUploadError(err.message);
+      setIsProcessing(false);
+      setUploadStatus('error');
+    }
+  };
+
   // Drag and drop handlers
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -227,8 +383,10 @@ const KnowledgeLab = () => {
         handleFileUpload(selectedFile);
       } else if (selectedType === 'url' && urlInput) {
         handleUrlUpload();
+      } else if (selectedType === 'text' && textInput.trim()) {
+        handleTextUpload();
       } else {
-        setUploadError('Please select a file or enter a URL');
+        setUploadError('Please select a file, enter a URL, or add text');
       }
     }
   };
@@ -441,101 +599,70 @@ const KnowledgeLab = () => {
             lineHeight: '1.3',
             fontFamily: 'var(--font-sans)'
           }}>
-            Document: Global Economics - Chapter 4 Summary
+            {selectedMaterial?.file_name || 'Document Summary'}
           </h2>
 
+          {/* Loading State */}
+          {isLoadingMaterials && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '3rem',
+              color: 'var(--text-muted)'
+            }}>
+              <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', marginRight: '0.5rem' }} />
+              Loading summary...
+            </div>
+          )}
+
           {/* AI Summary Box */}
-          <div style={{
-            backgroundColor: 'var(--bg-secondary)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.5rem',
-            marginBottom: '2rem',
-            position: 'relative'
-          }}>
-            <p style={{ fontSize: '1.05rem', lineHeight: '1.7' }}>
-              <strong>AI-Generated Summary:</strong> This chapter provides an overview of international
-              trade theories, focusing on comparative advantage and the impact of tariffs.
-              Key concepts include the models of{' '}
-              <span style={{ textDecoration: 'underline', color: 'var(--primary-600)' }}>Ricardo</span> and{' '}
-              <span style={{ textDecoration: 'underline', color: 'var(--primary-600)' }}>Heckscher-Ohlin</span>,
-              highlighting how{' '}
-              <span
-                style={{
-                  backgroundColor: 'var(--accent-light)',
-                  color: 'var(--text-primary)',
-                  padding: '0.1rem 0.25rem',
-                  borderRadius: '2px',
-                  cursor: 'pointer',
-                  position: 'relative'
-                }}
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-              >
-                resource endowments
-                {showTooltip && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'var(--bg-card)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '0.75rem 1rem',
-                    boxShadow: 'var(--shadow-modal)',
-                    width: '200px',
-                    fontSize: 'var(--text-small)',
-                    fontFamily: 'var(--font-sans)',
-                    zIndex: 10,
-                    marginBottom: '0.5rem'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--primary-600)', fontWeight: 600, marginBottom: '0.25rem' }}>
-                      <Info size={14} />
-                      Why this changed
-                    </div>
-                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                      Updated based on your recent study session notes.
-                    </p>
-                  </div>
-                )}
-              </span>{' '}
-              influence trade patterns.
-            </p>
-          </div>
+          {!isLoadingMaterials && selectedMaterial?.latest_summary && (
+            <div style={{
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              position: 'relative'
+            }}>
+              <MarkdownContent content={selectedMaterial.latest_summary} />
+            </div>
+          )}
 
-          {/* Section 1: Introduction */}
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: 700,
-            marginBottom: '1rem',
-            fontFamily: 'var(--font-sans)'
-          }}>
-            1. Introduction to Global Trade:
-          </h3>
-          <p style={{ fontSize: '1.05rem', lineHeight: '1.8', marginBottom: '2rem' }}>
-            International trade allows countries to specialize in producing goods where they
-            have a <span style={{ textDecoration: 'underline', color: 'var(--primary-600)' }}>comparative advantage</span>.
-            This principle, established by David Ricardo,
-            demonstrates how trade can benefit all participating nations even when one
-            country is more efficient at producing everything.
-          </p>
-
-          {/* Section 2: Recommendation */}
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: 700,
-            marginBottom: '1rem',
-            fontFamily: 'var(--font-sans)'
-          }}>
-            2. Recommendation to Global Trade
-          </h3>
-          <p style={{ fontSize: '1.05rem', lineHeight: '1.8' }}>
-            Countries should focus on industries where they have natural advantages, whether
-            through labor costs, natural resources, or technological capabilities. This leads to
-            more efficient global production and lower consumer prices.
-          </p>
+          {/* No Summary Available */}
+          {!isLoadingMaterials && !selectedMaterial?.latest_summary && selectedMaterial && (
+            <div style={{
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+              padding: '2rem',
+              textAlign: 'center',
+              color: 'var(--text-muted)'
+            }}>
+              <p>Summary is being generated. Please check back shortly.</p>
+            </div>
+          )}
         </article>
+      )}
+
+      {/* No Content State */}
+      {!hasContent && !isLoadingMaterials && (
+        <div style={{
+          backgroundColor: 'var(--bg-card)',
+          padding: '4rem',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: 'var(--shadow-soft)',
+          border: '1px solid var(--border-subtle)',
+          textAlign: 'center',
+          color: 'var(--text-muted)'
+        }}>
+          <FileText size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+          <h3 style={{ fontFamily: 'var(--font-sans)', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+            No study materials yet
+          </h3>
+          <p>Upload a document to get started with AI-powered summaries.</p>
+        </div>
       )}
 
       {/* Floating Action Bar */}
