@@ -488,7 +488,7 @@ Key Points:
                 "stream": False,
                 "options": {
                     "temperature": 0.1,      # OPTIMIZATION: Low temp for factual output
-                    "num_predict": 200,      # OPTIMIZATION: ≤250 tokens per chunk summary
+                    "num_predict": 512,      # Increased for better chunk summaries
                     "top_p": 0.9,            # Focused sampling
                 }
             },
@@ -605,7 +605,7 @@ Summary:"""
                     "stream": False,
                     "options": {
                         "temperature": 0.15,     # OPTIMIZATION: Low temp for factual output
-                        "num_predict": 250,      # OPTIMIZATION: ≤250 tokens for speed
+                        "num_predict": 1024,     # Increased for complete summaries
                         "top_p": 0.9,
                     }
                 }
@@ -649,7 +649,7 @@ Final Summary:"""
                     "stream": False,
                     "options": {
                         "temperature": 0.2,      # OPTIMIZATION: Slightly higher for coherent synthesis
-                        "num_predict": 250,      # OPTIMIZATION: ≤250 tokens final summary
+                        "num_predict": 1024,     # Increased for complete final summaries
                         "top_p": 0.9,
                     }
                 }
@@ -814,6 +814,44 @@ async def process_url(
         }).execute()
         
         # 7. Update status: Complete
+        await update_status(firebase_uid, file_id, "complete", 100, "Summary generated successfully!")
+        
+    except Exception as e:
+        await update_status(firebase_uid, file_id, "error", 0, str(e))
+        raise
+
+async def process_text(firebase_uid: str, file_id: str, text: str, title: str):
+    """
+    Process raw text input: generate summary directly.
+    
+    FLOW (simplified - no extraction needed):
+    1. Summarize text
+    2. Save summary to Supabase
+    3. Update status
+    
+    STORAGE:
+    - Summary → Supabase (persist)
+    """
+    try:
+        # 1. Update status: Summarizing
+        await update_status(firebase_uid, file_id, "summarizing", 50, "Generating AI summary...")
+        
+        # 2. Generate summary (PERSIST)
+        summary_text = await generate_summary(text)
+        
+        if not summary_text or not summary_text.strip():
+            raise ValueError("Failed to generate summary")
+        
+        # 3. Save summary to Supabase (PERSIST)
+        supabase = get_supabase()
+        supabase.table("summaries").insert({
+            "document_id": file_id,
+            "firebase_uid": firebase_uid,
+            "summary_text": summary_text,
+            "version": 1
+        }).execute()
+        
+        # 4. Update status: Complete
         await update_status(firebase_uid, file_id, "complete", 100, "Summary generated successfully!")
         
     except Exception as e:
