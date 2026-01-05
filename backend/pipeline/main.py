@@ -89,7 +89,7 @@ app = FastAPI(
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5175"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -152,6 +152,10 @@ class FileUploadResponse(BaseModel):
 
 class URLUploadRequest(BaseModel):
     url: str
+    title: Optional[str] = None
+
+class TextUploadRequest(BaseModel):
+    text: str
     title: Optional[str] = None
 
 class ProcessingStatus(BaseModel):
@@ -406,6 +410,82 @@ async def upload_url(
     )
 
 # =============================================================================
+# TEXT UPLOAD ENDPOINT
+# =============================================================================
+
+@app.post("/api/upload/text", response_model=FileUploadResponse)
+async def upload_text(
+    request: TextUploadRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_firebase_user)
+):
+    """
+    Process raw text as study material.
+    
+    WHY DIFFERENT FLOW:
+    - No file to upload to Firebase Storage
+    - Text is directly passed to summarization
+    - Minimal storage footprint
+    
+    STORAGE: 
+    - Text stored in database (for regeneration if needed)
+    - Metadata → Supabase
+    - Summary → Supabase (after summarization)
+    """
+    # 1. Get firebase_uid from authenticated user
+    firebase_uid = user["uid"]
+    user_email = user.get("email")
+    
+    # 1.5. Ensure user profile exists in Supabase
+    await ensure_user_profile(firebase_uid, user_email)
+    
+    # 2. Generate file ID
+    file_id = str(uuid.uuid4())
+    
+    # 3. Generate a title from text if not provided
+    text_preview = request.text[:50].strip().replace('\n', ' ')
+    title = request.title or f"Text Note: {text_preview}..."
+    
+    # 4. Save metadata
+    supabase = get_supabase()
+    
+    metadata = {
+        "file_id": file_id,
+        "firebase_uid": firebase_uid,
+        "file_name": title,
+        "file_type": "url",  # Reuse 'url' type since there's no 'text' enum
+        "storage_path": f"text://{file_id}",  # Virtual path for text content
+    }
+    
+    supabase.table("files").insert(metadata).execute()
+    
+    # 4.5. Also insert into documents_metadata (for summaries foreign key)
+    supabase.table("documents_metadata").insert({
+        "id": file_id,
+        "firebase_uid": firebase_uid
+    }).execute()
+    
+    # 5. Update status
+    await update_processing_status(firebase_uid, file_id, "summarizing", 50, "Generating summary...")
+    
+    # 6. Trigger background processing
+    background_tasks.add_task(
+        process_text_background,
+        firebase_uid=firebase_uid,
+        file_id=file_id,
+        text=request.text,
+        title=title
+    )
+    
+    return FileUploadResponse(
+        file_id=file_id,
+        file_name=title,
+        file_type="url",
+        storage_path=f"text://{file_id}",
+        status="processing"
+    )
+
+# =============================================================================
 # STATUS ENDPOINT
 # =============================================================================
 
@@ -445,15 +525,40 @@ async def get_status(file_id: str, user: dict = Depends(get_firebase_user)):
 async def get_materials(user: dict = Depends(get_firebase_user)):
     """
     Get all study materials for the authenticated user.
+    Returns files with their latest summary.
     """
     firebase_uid = user["uid"]
     
     supabase = get_supabase()
     
-    # Use the helper function we created in SQL
-    result = supabase.rpc("get_user_materials", {"p_firebase_uid": firebase_uid}).execute()
+    # Get all files for the user
+    files_result = supabase.table("files")\
+        .select("file_id, file_name, file_type, storage_path, upload_time")\
+        .eq("firebase_uid", firebase_uid)\
+        .order("upload_time", desc=True)\
+        .execute()
     
-    return {"materials": result.data}
+    materials = []
+    for file in files_result.data or []:
+        # Get the latest summary for each file
+        summary_result = supabase.table("summaries")\
+            .select("summary_text")\
+            .eq("document_id", file["file_id"])\
+            .order("version", desc=True)\
+            .limit(1)\
+            .execute()
+        
+        materials.append({
+            "file_id": file["file_id"],
+            "file_name": file["file_name"],
+            "file_type": file["file_type"],
+            "storage_path": file["storage_path"],
+            "upload_time": file["upload_time"],
+            "has_summary": len(summary_result.data or []) > 0,
+            "latest_summary": summary_result.data[0]["summary_text"] if summary_result.data else None
+        })
+    
+    return {"materials": materials}
 
 # =============================================================================
 # GET SUMMARY ENDPOINT
@@ -526,6 +631,19 @@ async def process_url_background(
     """
     from extractors import process_url
     await process_url(firebase_uid, file_id, url)
+
+async def process_text_background(
+    firebase_uid: str,
+    file_id: str,
+    text: str,
+    title: str
+):
+    """
+    Background task for text processing.
+    Directly summarizes the provided text.
+    """
+    from extractors import process_text
+    await process_text(firebase_uid, file_id, text, title)
 
 # =============================================================================
 # HEALTH CHECK

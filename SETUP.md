@@ -127,7 +127,7 @@ JINA_READER_API_KEY=your-jina-api-key-here
 # ===============================
 # FRONTEND CONFIG
 # ===============================
-VITE_BACKEND_URL=http://localhost:8001
+VITE_BACKEND_URL=http://localhost:8000
 ```
 
 ### Setup Firebase Service Account
@@ -168,10 +168,10 @@ Open a terminal:
 
 ```bash
 cd backend/pipeline
-python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Backend will run on **http://localhost:8001**
+Backend will run on **http://localhost:8000**
 
 ### Start Frontend Server
 
@@ -190,15 +190,15 @@ Check that all required services are running:
 
 ```bash
 # Windows PowerShell
-Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -in 5173,8001,11434} | Select-Object LocalPort, State
+Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -in 5173,8000,11434} | Select-Object LocalPort, State
 
 # macOS/Linux
-lsof -i :5173,8001,11434
+lsof -i :5173,8000,11434
 ```
 
 You should see:
 - **5173** - Frontend (Vite)
-- **8001** - Backend (FastAPI)
+- **8000** - Backend (FastAPI)
 - **11434** - Ollama (LLaMA)
 
 ## 7. Access the Application
@@ -211,13 +211,13 @@ Open your browser and navigate to:
 
 ### Port Already in Use
 
-**Backend (8001):**
+**Backend (8000):**
 ```bash
 # Windows
-Get-Process -Id (Get-NetTCPConnection -LocalPort 8001).OwningProcess | Stop-Process -Force
+Get-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess | Stop-Process -Force
 
 # macOS/Linux
-lsof -ti:8001 | xargs kill -9
+lsof -ti:8000 | xargs kill -9
 ```
 
 **Frontend (5173):**

@@ -22,4 +22,22 @@ const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/**
+ * Get the current Firebase user
+ * @returns {object|null} Current user or null
+ */
+export const getCurrentUser = () => {
+  return auth.currentUser;
+};
+
+/**
+ * Get Firebase ID token for the current user
+ * @returns {Promise<string|null>} ID token or null if not authenticated
+ */
+export const getFirebaseIdToken = async () => {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return await user.getIdToken();
+};
+
 export { app, analytics, auth, db };
